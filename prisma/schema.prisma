@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  admin
+  user
+}
+
+enum MatchPhase {
+  GROUP_STAGE
+  ROUND_OF_32
+  ROUND_OF_16
+  QUARTER_FINAL
+  SEMI_FINAL
+  THIRD_PLACE
+  FINAL
+}
+
+enum MatchStatus {
+  scheduled
+  open
+  closed
+  finished
+}
+
+model users {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  display_name  String
+  password_hash String
+  role          UserRole @default(user)
+  is_active     Boolean  @default(true)
+  has_paid      Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  predictions predictions[]
+}
+
+model teams {
+  id           String  @id @default(cuid())
+  name         String
+  short_name   String
+  group_letter String
+  flag_emoji   String
+
+  home_matches matches[] @relation("HomeTeamMatches")
+  away_matches matches[] @relation("AwayTeamMatches")
+
+  @@index([group_letter])
+}
+
+model matches {
+  id           String      @id @default(cuid())
+  match_number Int         @unique
+  phase        MatchPhase
+  group_letter String?
+  home_team_id String?
+  away_team_id String?
+  kickoff_at   DateTime
+  venue        String
+  city         String
+  home_score   Int?
+  away_score   Int?
+  status       MatchStatus @default(scheduled)
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+
+  home_team teams? @relation("HomeTeamMatches", fields: [home_team_id], references: [id], onDelete: SetNull)
+  away_team teams? @relation("AwayTeamMatches", fields: [away_team_id], references: [id], onDelete: SetNull)
+
+  predictions predictions[]
+
+  @@index([phase, status])
+  @@index([group_letter])
+  @@index([kickoff_at])
+}
+
+model predictions {
+  id                    String   @id @default(cuid())
+  user_id               String
+  match_id              String
+  predicted_home_score  Int
+  predicted_away_score  Int
+  points                Int      @default(0)
+  is_exact              Boolean  @default(false)
+  is_result_correct     Boolean  @default(false)
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  user  users   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  match matches @relation(fields: [match_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, match_id])
+  @@index([user_id])
+  @@index([match_id])
+  @@index([points])
+}
+
+model phase_locks {
+  id                  String     @id @default(cuid())
+  phase               MatchPhase @unique
+  is_enabled          Boolean    @default(false)
+  prediction_deadline DateTime?
+  created_at          DateTime   @default(now())
+  updated_at          DateTime   @updatedAt
+}

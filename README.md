@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FCW 2026 - Quiniela Mundial
 
-## Getting Started
+Aplicación web privada para quiniela/fantasy del Mundial FIFA 2026.
 
-First, run the development server:
+## Stack
+
+- Next.js App Router + TypeScript
+- Prisma ORM
+- PostgreSQL (Neon o Supabase Postgres)
+- Auth personalizada (username/password + cookies JWT httpOnly)
+- Tailwind CSS
+
+## Requisitos
+
+- Node.js 20+
+- Base de datos PostgreSQL administrada (Neon o Supabase)
+
+## Variables de entorno
+
+Crea un archivo `.env`:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require"
+DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require"
+JWT_SECRET="reemplaza-con-un-secreto-seguro"
+INITIAL_ADMIN_USERNAME="admin"
+INITIAL_ADMIN_PASSWORD="cambia-esta-password"
+```
+
+> `DATABASE_URL` se usa en runtime.
+> `DIRECT_URL` se recomienda para migraciones directas.
+
+## Instalación local
+
+```bash
+npm install
+npx prisma generate
+```
+
+## Migraciones y seed
+
+Cuando tengas `DATABASE_URL` configurada:
+
+```bash
+npx prisma migrate dev --name init
+npx prisma db seed
+```
+
+Para entornos no-locales (staging/prod):
+
+```bash
+npx prisma migrate deploy
+```
+
+## Ejecutar en desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir: [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Build de producción
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+## Deploy en Vercel + PostgreSQL externo
 
-To learn more about Next.js, take a look at the following resources:
+1. Crea tu base en Neon o Supabase y copia `DATABASE_URL` y `DIRECT_URL`.
+2. Sube este repo a GitHub.
+3. Importa el proyecto en Vercel.
+4. En Vercel -> Settings -> Environment Variables, agrega:
+   - `DATABASE_URL`
+   - `DIRECT_URL`
+   - `JWT_SECRET`
+   - `INITIAL_ADMIN_USERNAME`
+   - `INITIAL_ADMIN_PASSWORD`
+5. Ejecuta migraciones contra producción (CI o local apuntando a prod):
+   - `npx prisma migrate deploy`
+6. (Opcional) corre seed inicial:
+   - `npx prisma db seed`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Con esto la app queda desplegable en Vercel usando PostgreSQL administrado.
