@@ -52,11 +52,7 @@ export function LoginForm() {
       className="glass-panel relative w-full max-w-md overflow-hidden rounded-2xl p-6"
     >
       <div className="pointer-events-none absolute -right-14 -top-14 h-36 w-36 rounded-full bg-emerald-500/10 blur-2xl" />
-      <h1 className="fifa-title-glow text-2xl font-bold text-zinc-50">Acceso privado FCW 2026</h1>
-      <p className="mt-2 text-sm text-zinc-400">
-        Ingresa con tu usuario y contraseña asignados por el administrador.
-      </p>
-
+      <h1 className="fifa-title-glow text-center text-2xl font-bold text-zinc-50">Quiniela FIFA World Cup 2026</h1>
       <div className="mt-6 space-y-4">
         <div>
           <label htmlFor="username" className="mb-1 block text-sm font-medium text-zinc-300">
