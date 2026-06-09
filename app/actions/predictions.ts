@@ -47,6 +47,8 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
         phase: true,
         kickoff_at: true,
         status: true,
+        home_team_id: true,
+        away_team_id: true,
         home_score: true,
         away_score: true,
       },

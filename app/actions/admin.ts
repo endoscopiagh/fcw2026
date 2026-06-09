@@ -7,7 +7,6 @@ import { z } from "zod";
 import { getCurrentSessionFromCookies } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword } from "@/lib/auth/password";
-import { enableNextPhaseIfPreviousFinished } from "@/lib/domain/deadlines";
 import { recalculatePredictionsForMatch } from "@/lib/domain/predictions";
 
 function formDataBool(value: FormDataEntryValue | null): boolean {
@@ -199,7 +198,6 @@ export async function updateMatchResultAction(formData: FormData): Promise<void>
 
   if (parsed.data.status === "finished") {
     await recalculatePredictionsForMatch(parsed.data.match_id);
-    await enableNextPhaseIfPreviousFinished();
   }
 
   revalidatePath("/admin");

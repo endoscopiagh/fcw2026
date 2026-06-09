@@ -10,7 +10,6 @@ type AdminResultEditorProps = {
     status: MatchStatus;
     phase: string;
     group_letter: string | null;
-    kickoff_at: Date;
     home_score: number | null;
     away_score: number | null;
     home_team: { name: string; flag_emoji: string } | null;
@@ -43,8 +42,7 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
           </p>
           <p className="text-xs text-zinc-500">
             {match.phase}
-            {match.group_letter ? ` • Grupo ${match.group_letter}` : ""} •{" "}
-            {match.kickoff_at.toLocaleString("es-MX")}
+            {match.group_letter ? ` • Grupo ${match.group_letter}` : ""}
           </p>
         </div>
         <span className="rounded-full border border-zinc-700 px-2 py-1 text-xs uppercase text-zinc-300">

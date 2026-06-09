@@ -24,6 +24,7 @@ export const PHASE_LABELS_ES: Record<MatchPhase, string> = {
 
 export const PRIVATE_ROUTE_PREFIXES = [
   "/dashboard",
+  "/cuenta",
   "/predicciones",
   "/partidos",
   "/grupos",

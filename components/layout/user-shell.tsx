@@ -20,6 +20,7 @@ export function UserShell({
 }: UserShellProps) {
   const navigation = [
     { href: "/dashboard", label: "Dashboard" },
+    { href: "/cuenta", label: "Cuenta" },
     { href: "/predicciones", label: "Predicciones" },
     { href: "/partidos", label: "Partidos" },
     { href: "/grupos", label: "Grupos" },

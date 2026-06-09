@@ -7,6 +7,8 @@ type MatchForLockCheck = {
   phase: MatchPhase;
   kickoff_at: Date;
   status: MatchStatus;
+  home_team_id: string | null;
+  away_team_id: string | null;
 };
 
 type UserForPredictionCheck = {
@@ -48,10 +50,6 @@ export function canUserPredict(params: {
 }): boolean {
   const { user, match, phaseLocks, referenceDate = new Date() } = params;
 
-  if (user.role === "admin") {
-    return true;
-  }
-
   if (!user.is_active || !user.has_paid) {
     return false;
   }
@@ -60,11 +58,13 @@ export function canUserPredict(params: {
     return false;
   }
 
-  const currentPhase = getCurrentTournamentPhase(phaseLocks);
-  const currentPhaseIndex = TOURNAMENT_PHASE_ORDER.indexOf(currentPhase);
-  const matchPhaseIndex = TOURNAMENT_PHASE_ORDER.indexOf(match.phase);
+  // Playoffs stay closed until the bracket is actually defined.
+  if (match.phase !== "GROUP_STAGE" && (!match.home_team_id || !match.away_team_id)) {
+    return false;
+  }
 
-  return matchPhaseIndex <= currentPhaseIndex;
+  const lockForMatchPhase = phaseLocks.find((lock) => lock.phase === match.phase);
+  return Boolean(lockForMatchPhase?.is_enabled);
 }
 
 export async function enableNextPhaseIfPreviousFinished(): Promise<MatchPhase | null> {

@@ -130,8 +130,7 @@ export default async function PrediccionesPage() {
                       </p>
                       <p className="text-xs text-zinc-500">
                         {PHASE_LABELS_ES[match.phase]}
-                        {match.group_letter ? ` • Grupo ${match.group_letter}` : ""} •{" "}
-                        {match.kickoff_at.toLocaleString("es-MX")}
+                        {match.group_letter ? ` • Grupo ${match.group_letter}` : ""}
                       </p>
                     </div>
                     <span className="rounded-full border border-zinc-700 px-2 py-1 text-xs uppercase text-zinc-300">

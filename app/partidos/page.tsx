@@ -71,7 +71,7 @@ export default async function PartidosPage({ searchParams }: PartidosPageProps) 
   return (
     <UserShell
       title="Partidos"
-      subtitle="Calendario completo con filtros, resultados y tu predicción."
+      subtitle="Listado completo con filtros, resultados y tu predicción."
       userDisplayName={user.display_name}
       showAdminLink={user.role === "admin"}
     >

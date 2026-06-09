@@ -44,9 +44,7 @@ export function MatchCard({ match, prediction, predictionStateLabel }: MatchCard
             />
             {match.away_team?.name ?? "Por definir"}
           </p>
-          <p className="text-xs text-zinc-500">
-            {match.kickoff_at.toLocaleString("es-MX")} • {match.venue}, {match.city}
-          </p>
+          <p className="text-xs text-zinc-500">{match.venue}, {match.city}</p>
         </div>
 
         <PhaseBadge phase={match.phase} groupLetter={match.group_letter} />

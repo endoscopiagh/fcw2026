@@ -170,7 +170,10 @@ export default async function DashboardPage() {
                         />
                         {match.away_team?.name ?? "Por definir"}
                       </p>
-                      <p className="text-xs text-zinc-500">{match.kickoff_at.toLocaleString("es-MX")}</p>
+                      <p className="text-xs text-zinc-500">
+                        {PHASE_LABELS_ES[match.phase]}
+                        {match.group_letter ? ` • Grupo ${match.group_letter}` : ""}
+                      </p>
                     </div>
 
                     <span className="rounded-full border border-zinc-700 px-2 py-1 text-xs text-zinc-300">
