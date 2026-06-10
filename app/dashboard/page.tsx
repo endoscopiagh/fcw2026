@@ -1,25 +1,25 @@
 import Link from "next/link";
 
+import { RankDisplay } from "@/components/dashboard/rank-display";
 import { CountdownTimer } from "@/components/ui/countdown-timer";
 import { Flag } from "@/components/ui/flag";
 import { UserShell } from "@/components/layout/user-shell";
 import { requireAuth } from "@/lib/auth/guards";
-import { GROUP_STAGE_DEADLINE_CDMX_ISO, PHASE_LABELS_ES } from "@/lib/constants/tournament";
+import { PHASE_LABELS_ES } from "@/lib/constants/tournament";
 import { prisma } from "@/lib/db/prisma";
-import { canUserPredict, getCurrentTournamentPhase, isGroupStageLocked } from "@/lib/domain/deadlines";
+import { canUserPredict, getCurrentTournamentPhase } from "@/lib/domain/deadlines";
 import { getLeaderboardRows } from "@/lib/domain/predictions";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
-  const now = new Date();
 
-  const [phaseLocks, upcomingMatches, allFutureMatches, userPredictions, leaderboard, firstMatch] =
+  const [phaseLocks, openMatches, userPredictions, leaderboard, firstMatch] =
     await Promise.all([
     prisma.phase_locks.findMany(),
     prisma.matches.findMany({
       where: {
-        kickoff_at: {
-          gte: now,
+        status: {
+          in: ["scheduled", "open"],
         },
       },
       include: {
@@ -37,25 +37,9 @@ export default async function DashboardPage() {
         },
       },
       orderBy: {
-        kickoff_at: "asc",
+        match_number: "asc",
       },
       take: 8,
-    }),
-    prisma.matches.findMany({
-      where: {
-        kickoff_at: {
-          gte: now,
-        },
-      },
-      include: {
-        predictions: {
-          where: { user_id: user.id },
-          select: { id: true },
-        },
-      },
-      orderBy: {
-        kickoff_at: "asc",
-      },
     }),
     prisma.predictions.findMany({
       where: { user_id: user.id },
@@ -70,7 +54,7 @@ export default async function DashboardPage() {
 
   const activePhase = getCurrentTournamentPhase(phaseLocks);
 
-  const availableMatches = upcomingMatches.filter((match) =>
+  const availableMatches = openMatches.filter((match) =>
     canUserPredict({
       user,
       match,
@@ -78,24 +62,13 @@ export default async function DashboardPage() {
     }),
   );
 
-  const pendingPredictions = allFutureMatches.filter(
-    (match) =>
-      canUserPredict({
-        user,
-        match,
-        phaseLocks,
-      }) && match.predictions.length === 0,
-  ).length;
+  const pendingPredictions = availableMatches.filter((match) => match.predictions.length === 0).length;
   const currentPoints = userPredictions.reduce((acc, item) => acc + item.points, 0);
 
-  const nextPredictableMatch = availableMatches[0] ?? null;
-  const nextDeadlineIso = !isGroupStageLocked(now)
-    ? GROUP_STAGE_DEADLINE_CDMX_ISO
-    : nextPredictableMatch?.kickoff_at.toISOString() ?? null;
+  const tournamentStartIso = firstMatch?.kickoff_at.toISOString() ?? null;
   const topLeaderboard = leaderboard.slice(0, 5);
   const currentLeaderboardPosition = leaderboard.find((row) => row.userId === user.id)?.posicion ?? null;
-  const tournamentStarted = firstMatch ? now >= firstMatch.kickoff_at : false;
-  const rankLabel = tournamentStarted && currentLeaderboardPosition ? `#${currentLeaderboardPosition}` : "No rank";
+  const rankLabel = currentLeaderboardPosition ? `#${currentLeaderboardPosition}` : "-";
 
   return (
     <UserShell
@@ -119,14 +92,16 @@ export default async function DashboardPage() {
             <p className="mt-2 text-xl font-bold text-zinc-100">{PHASE_LABELS_ES[activePhase]}</p>
           </article>
           <article className="glass-panel animate-fade-in-up rounded-xl p-4 text-center">
-            <p className="text-sm text-zinc-400">Próximo deadline</p>
+            <p className="text-sm text-zinc-400">Inicia en...</p>
             <p className="mt-2 text-lg font-bold text-zinc-100">
-              <CountdownTimer targetDateIso={nextDeadlineIso} />
+              <CountdownTimer targetDateIso={tournamentStartIso} />
             </p>
           </article>
           <article className="glass-panel animate-fade-in-up rounded-xl p-4 text-center">
             <p className="text-sm text-zinc-400">Posición en tabla</p>
-            <p className="mt-2 text-3xl font-bold text-amber-300">{rankLabel}</p>
+            <p className="mt-2 text-3xl font-bold text-amber-300">
+              <RankDisplay username={user.username} realRankLabel={rankLabel} />
+            </p>
           </article>
         </section>
 
@@ -138,11 +113,11 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          {upcomingMatches.length === 0 ? (
+          {openMatches.length === 0 ? (
             <p className="text-zinc-400">No hay partidos próximos cargados.</p>
           ) : (
             <div className="space-y-3">
-              {upcomingMatches.slice(0, 5).map((match) => {
+              {openMatches.slice(0, 5).map((match) => {
                 const alreadyPredicted = match.predictions.length > 0;
                 const canPredict = canUserPredict({
                   user,

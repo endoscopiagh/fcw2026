@@ -203,6 +203,7 @@ export async function updateMatchResultAction(formData: FormData): Promise<void>
   revalidatePath("/admin");
   revalidatePath("/admin/results");
   revalidatePath("/dashboard");
+  revalidatePath("/partidos");
   revalidatePath("/leaderboard");
 }
 

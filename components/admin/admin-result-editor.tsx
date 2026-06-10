@@ -14,6 +14,19 @@ type AdminResultEditorProps = {
     away_score: number | null;
     home_team: { name: string; flag_emoji: string } | null;
     away_team: { name: string; flag_emoji: string } | null;
+    predictions: Array<{
+      id: string;
+      predicted_home_score: number;
+      predicted_away_score: number;
+      points: number;
+      is_exact: boolean;
+      is_result_correct: boolean;
+      created_at: Date;
+      user: {
+        display_name: string;
+        username: string;
+      };
+    }>;
   };
 };
 
@@ -93,6 +106,41 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
       >
         Guardar resultado
       </button>
+
+      <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
+        <p className="text-sm font-semibold text-zinc-100">Predicciones registradas</p>
+        {match.predictions.length === 0 ? (
+          <p className="mt-2 text-xs text-zinc-500">Aún no hay predicciones para este partido.</p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {match.predictions.map((prediction) => (
+              <div
+                key={prediction.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-300"
+              >
+                <p className="font-medium text-zinc-200">
+                  {prediction.user.display_name} ({prediction.user.username})
+                </p>
+                <p>
+                  Predicción:{" "}
+                  <span className="font-semibold text-zinc-100">
+                    {prediction.predicted_home_score} - {prediction.predicted_away_score}
+                  </span>
+                </p>
+                {match.status === "finished" ? (
+                  <p>
+                    Puntos: <span className="font-semibold text-emerald-300">{prediction.points}</span>
+                    {prediction.is_exact ? " • Exacto" : ""}
+                    {!prediction.is_exact && prediction.is_result_correct ? " • Resultado correcto" : ""}
+                  </p>
+                ) : (
+                  <p className="text-zinc-400">Puntos: Pendiente</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </form>
   );
 }

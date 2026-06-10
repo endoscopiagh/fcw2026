@@ -48,15 +48,22 @@ export default async function PartidosPage({ searchParams }: PartidosPageProps) 
           select: { name: true, flag_emoji: true },
         },
         predictions: {
-          where: { user_id: user.id },
           select: {
+            user_id: true,
+            user: {
+              select: {
+                display_name: true,
+              },
+            },
             predicted_home_score: true,
             predicted_away_score: true,
             points: true,
+            is_exact: true,
+            is_result_correct: true,
           },
         },
       },
-      orderBy: [{ kickoff_at: "asc" }],
+      orderBy: [{ match_number: "asc" }],
     }),
   ]);
 
@@ -159,7 +166,7 @@ export default async function PartidosPage({ searchParams }: PartidosPageProps) 
             </p>
           ) : (
             filteredMatches.map((match) => {
-              const prediction = match.predictions[0];
+              const prediction = match.predictions.find((item) => item.user_id === user.id);
               const closed = isMatchPredictionClosed(match);
               const canPredict = canUserPredict({
                 user,
@@ -179,6 +186,14 @@ export default async function PartidosPage({ searchParams }: PartidosPageProps) 
                   match={match}
                   prediction={prediction}
                   predictionStateLabel={predictionStateLabel}
+                  communityPredictions={match.predictions.map((item) => ({
+                    userDisplayName: item.user.display_name,
+                    predictedHomeScore: item.predicted_home_score,
+                    predictedAwayScore: item.predicted_away_score,
+                    points: item.points,
+                    isExact: item.is_exact,
+                    isResultCorrect: item.is_result_correct,
+                  }))}
                 />
               );
             })

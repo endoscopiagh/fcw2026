@@ -23,9 +23,20 @@ type MatchCardProps = {
     points: number;
   };
   predictionStateLabel: string;
+  communityPredictions?: Array<{
+    userDisplayName: string;
+    predictedHomeScore: number;
+    predictedAwayScore: number;
+    points: number;
+    isExact: boolean;
+    isResultCorrect: boolean;
+  }>;
 };
 
-export function MatchCard({ match, prediction, predictionStateLabel }: MatchCardProps) {
+export function MatchCard({ match, prediction, predictionStateLabel, communityPredictions }: MatchCardProps) {
+  const shouldShowCommunityPredictions =
+    (match.status === "closed" || match.status === "finished") && Boolean(communityPredictions?.length);
+
   return (
     <article className="glass-panel rounded-xl p-4">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
@@ -77,6 +88,40 @@ export function MatchCard({ match, prediction, predictionStateLabel }: MatchCard
 
       {prediction ? (
         <p className="mt-2 text-xs text-zinc-400">Puntos obtenidos en este partido: {prediction.points}</p>
+      ) : null}
+
+      {shouldShowCommunityPredictions ? (
+        <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
+          <p className="mb-2 text-sm font-semibold text-zinc-100">Predicciones de usuarios</p>
+          <div className="space-y-2">
+            {communityPredictions
+              ?.slice()
+              .sort((a, b) => a.userDisplayName.localeCompare(b.userDisplayName))
+              .map((entry, index) => (
+                <div
+                  key={`${entry.userDisplayName}-${index}`}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-300"
+                >
+                  <p className="font-medium text-zinc-200">{entry.userDisplayName}</p>
+                  <p>
+                    Predicción:{" "}
+                    <span className="font-semibold text-zinc-100">
+                      {entry.predictedHomeScore} - {entry.predictedAwayScore}
+                    </span>
+                  </p>
+                  {match.status === "finished" ? (
+                    <p>
+                      Puntos: <span className="font-semibold text-emerald-300">{entry.points}</span>
+                      {entry.isExact ? " • Exacto" : ""}
+                      {!entry.isExact && entry.isResultCorrect ? " • Resultado correcto" : ""}
+                    </p>
+                  ) : (
+                    <p className="text-zinc-400">Puntos: Pendiente</p>
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
       ) : null}
     </article>
   );

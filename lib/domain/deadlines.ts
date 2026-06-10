@@ -1,11 +1,10 @@
 import { MatchPhase, MatchStatus, phase_locks } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
-import { GROUP_STAGE_DEADLINE_CDMX_ISO, TOURNAMENT_PHASE_ORDER } from "@/lib/constants/tournament";
+import { TOURNAMENT_PHASE_ORDER } from "@/lib/constants/tournament";
 
 type MatchForLockCheck = {
   phase: MatchPhase;
-  kickoff_at: Date;
   status: MatchStatus;
   home_team_id: string | null;
   away_team_id: string | null;
@@ -17,21 +16,11 @@ type UserForPredictionCheck = {
   has_paid: boolean;
 };
 
-export function isGroupStageLocked(referenceDate = new Date()): boolean {
-  const lockDate = new Date(GROUP_STAGE_DEADLINE_CDMX_ISO);
-  return referenceDate >= lockDate;
-}
-
-export function isMatchPredictionClosed(match: MatchForLockCheck, referenceDate = new Date()): boolean {
+export function isMatchPredictionClosed(match: MatchForLockCheck): boolean {
   if (match.status === "finished" || match.status === "closed") {
     return true;
   }
-
-  if (match.phase === "GROUP_STAGE") {
-    return isGroupStageLocked(referenceDate);
-  }
-
-  return referenceDate >= match.kickoff_at;
+  return false;
 }
 
 export function getCurrentTournamentPhase(locks: phase_locks[]): MatchPhase {
@@ -46,15 +35,14 @@ export function canUserPredict(params: {
   user: UserForPredictionCheck;
   match: MatchForLockCheck;
   phaseLocks: phase_locks[];
-  referenceDate?: Date;
 }): boolean {
-  const { user, match, phaseLocks, referenceDate = new Date() } = params;
+  const { user, match, phaseLocks } = params;
 
   if (!user.is_active || !user.has_paid) {
     return false;
   }
 
-  if (isMatchPredictionClosed(match, referenceDate)) {
+  if (isMatchPredictionClosed(match)) {
     return false;
   }
 

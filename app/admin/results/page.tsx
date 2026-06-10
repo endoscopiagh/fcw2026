@@ -21,7 +21,7 @@ export default async function AdminResultsPage({ searchParams }: AdminResultsPag
   const [matches, phaseLocks] = await Promise.all([
     prisma.matches.findMany({
       where: selectedPhase ? { phase: selectedPhase } : undefined,
-      orderBy: [{ kickoff_at: "asc" }],
+      orderBy: [{ match_number: "asc" }],
       include: {
         home_team: {
           select: { name: true, flag_emoji: true },
@@ -29,8 +29,25 @@ export default async function AdminResultsPage({ searchParams }: AdminResultsPag
         away_team: {
           select: { name: true, flag_emoji: true },
         },
+        predictions: {
+          select: {
+            id: true,
+            predicted_home_score: true,
+            predicted_away_score: true,
+            points: true,
+            is_exact: true,
+            is_result_correct: true,
+            created_at: true,
+            user: {
+              select: {
+                display_name: true,
+                username: true,
+              },
+            },
+          },
+          orderBy: [{ created_at: "desc" }],
+        },
       },
-      take: 40,
     }),
     prisma.phase_locks.findMany({
       orderBy: { created_at: "asc" },
@@ -80,7 +97,7 @@ export default async function AdminResultsPage({ searchParams }: AdminResultsPag
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <h2 className="text-lg font-semibold">Captura de resultados</h2>
         <p className="mt-1 text-sm text-zinc-400">
-          Edita marcador real, cambia estado y finaliza partidos para recalcular puntos.
+          Edita marcador real, cambia estado y finaliza partidos para recalcular puntos. Incluye placeholders de eliminatorias.
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
