@@ -113,6 +113,12 @@ type GroupStageFixtureSeed = {
   city: string;
 };
 
+type GroupStageMatchOrderSeed = {
+  group: keyof typeof GROUPS;
+  home: string;
+  away: string;
+};
+
 // Fuente: calendario FIFA 2026 fase de grupos (horarios ET), convertido a ISO con offset -04:00.
 const GROUP_STAGE_FIXTURES: GroupStageFixtureSeed[] = [
   { group: "A", home: "México", away: "Sudáfrica", kickoffEtIso: "2026-06-11T15:00:00-04:00", venue: "Estadio Ciudad de México", city: "Ciudad de México" },
@@ -200,6 +206,81 @@ const GROUP_STAGE_FIXTURES: GroupStageFixtureSeed[] = [
   { group: "L", home: "Croacia", away: "Ghana", kickoffEtIso: "2026-06-27T17:00:00-04:00", venue: "Philadelphia Stadium", city: "Philadelphia" },
 ];
 
+const GROUP_STAGE_MATCH_ORDER: GroupStageMatchOrderSeed[] = [
+  { group: "A", home: "México", away: "Sudáfrica" },
+  { group: "A", home: "Corea del Sur", away: "Chequia" },
+  { group: "B", home: "Canadá", away: "Bosnia y Herzegovina" },
+  { group: "D", home: "Estados Unidos", away: "Paraguay" },
+  { group: "B", home: "Catar", away: "Suiza" },
+  { group: "C", home: "Brasil", away: "Marruecos" },
+  { group: "C", home: "Haití", away: "Escocia" },
+  { group: "D", home: "Australia", away: "Turquía" },
+  { group: "E", home: "Alemania", away: "Curazao" },
+  { group: "F", home: "Países Bajos", away: "Japón" },
+  { group: "E", home: "Costa de Marfil", away: "Ecuador" },
+  { group: "F", home: "Suecia", away: "Túnez" },
+  { group: "H", home: "España", away: "Cabo Verde" },
+  { group: "G", home: "Bélgica", away: "Egipto" },
+  { group: "H", home: "Arabia Saudita", away: "Uruguay" },
+  { group: "G", home: "Irán", away: "Nueva Zelanda" },
+  { group: "I", home: "Francia", away: "Senegal" },
+  { group: "I", home: "Irak", away: "Noruega" },
+  { group: "J", home: "Argentina", away: "Argelia" },
+  { group: "J", home: "Austria", away: "Jordania" },
+  { group: "K", home: "Portugal", away: "República Democrática del Congo" },
+  { group: "L", home: "Inglaterra", away: "Croacia" },
+  { group: "L", home: "Ghana", away: "Panamá" },
+  { group: "K", home: "Uzbekistán", away: "Colombia" },
+  { group: "A", home: "Chequia", away: "Sudáfrica" },
+  { group: "B", home: "Suiza", away: "Bosnia y Herzegovina" },
+  { group: "B", home: "Canadá", away: "Catar" },
+  { group: "A", home: "México", away: "Corea del Sur" },
+  { group: "D", home: "Estados Unidos", away: "Australia" },
+  { group: "C", home: "Escocia", away: "Marruecos" },
+  { group: "C", home: "Brasil", away: "Haití" },
+  { group: "D", home: "Turquía", away: "Paraguay" },
+  { group: "F", home: "Países Bajos", away: "Suecia" },
+  { group: "E", home: "Alemania", away: "Costa de Marfil" },
+  { group: "E", home: "Ecuador", away: "Curazao" },
+  { group: "F", home: "Túnez", away: "Japón" },
+  { group: "H", home: "España", away: "Arabia Saudita" },
+  { group: "G", home: "Bélgica", away: "Irán" },
+  { group: "H", home: "Uruguay", away: "Cabo Verde" },
+  { group: "G", home: "Nueva Zelanda", away: "Egipto" },
+  { group: "I", home: "Francia", away: "Irak" },
+  { group: "I", home: "Noruega", away: "Senegal" },
+  { group: "J", home: "Argentina", away: "Austria" },
+  { group: "J", home: "Jordania", away: "Argelia" },
+  { group: "K", home: "Portugal", away: "Uzbekistán" },
+  { group: "L", home: "Inglaterra", away: "Ghana" },
+  { group: "L", home: "Panamá", away: "Croacia" },
+  { group: "K", home: "Colombia", away: "República Democrática del Congo" },
+  { group: "A", home: "Sudáfrica", away: "Corea del Sur" },
+  { group: "A", home: "Chequia", away: "México" },
+  { group: "B", home: "Suiza", away: "Canadá" },
+  { group: "B", home: "Bosnia y Herzegovina", away: "Catar" },
+  { group: "D", home: "Paraguay", away: "Australia" },
+  { group: "D", home: "Turquía", away: "Estados Unidos" },
+  { group: "C", home: "Brasil", away: "Escocia" },
+  { group: "C", home: "Marruecos", away: "Haití" },
+  { group: "F", home: "Túnez", away: "Países Bajos" },
+  { group: "F", home: "Japón", away: "Suecia" },
+  { group: "E", home: "Ecuador", away: "Alemania" },
+  { group: "E", home: "Curazao", away: "Costa de Marfil" },
+  { group: "G", home: "Nueva Zelanda", away: "Bélgica" },
+  { group: "G", home: "Egipto", away: "Irán" },
+  { group: "H", home: "Uruguay", away: "España" },
+  { group: "H", home: "Cabo Verde", away: "Arabia Saudita" },
+  { group: "I", home: "Noruega", away: "Francia" },
+  { group: "I", home: "Senegal", away: "Irak" },
+  { group: "L", home: "Panamá", away: "Inglaterra" },
+  { group: "L", home: "Croacia", away: "Ghana" },
+  { group: "K", home: "Colombia", away: "Portugal" },
+  { group: "K", home: "República Democrática del Congo", away: "Uzbekistán" },
+  { group: "J", home: "Argelia", away: "Austria" },
+  { group: "J", home: "Jordania", away: "Argentina" },
+];
+
 const GROUP_STAGE_MATCH_COUNT = 72;
 
 function buildKickoffDate(baseDayOffset: number, slot: number): Date {
@@ -258,8 +339,28 @@ async function seedTeamsAndMatches() {
     throw new Error(`Se esperaban ${GROUP_STAGE_MATCH_COUNT} partidos de grupos y hay ${GROUP_STAGE_FIXTURES.length}.`);
   }
 
-  let matchNumber = 1;
+  if (GROUP_STAGE_MATCH_ORDER.length !== GROUP_STAGE_MATCH_COUNT) {
+    throw new Error(
+      `Se esperaban ${GROUP_STAGE_MATCH_COUNT} partidos en el orden de grupos y hay ${GROUP_STAGE_MATCH_ORDER.length}.`,
+    );
+  }
+
+  const fixtureByKey = new Map<string, GroupStageFixtureSeed>();
   for (const fixture of GROUP_STAGE_FIXTURES) {
+    const key = `${fixture.group}|${fixture.home}|${fixture.away}`;
+    fixtureByKey.set(key, fixture);
+  }
+
+  let matchNumber = 1;
+  for (const orderItem of GROUP_STAGE_MATCH_ORDER) {
+    const fixtureKey = `${orderItem.group}|${orderItem.home}|${orderItem.away}`;
+    const fixture = fixtureByKey.get(fixtureKey);
+    if (!fixture) {
+      throw new Error(
+        `No se encontró el fixture para orden: ${orderItem.home} vs ${orderItem.away} (${orderItem.group}).`,
+      );
+    }
+
     const home = teamByName.get(fixture.home);
     const away = teamByName.get(fixture.away);
 
