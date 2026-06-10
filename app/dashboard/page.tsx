@@ -13,7 +13,7 @@ import { getLeaderboardRows } from "@/lib/domain/predictions";
 export default async function DashboardPage() {
   const user = await requireAuth();
 
-  const [phaseLocks, openMatches, userPredictions, leaderboard, firstMatch] =
+  const [phaseLocks, openMatches, userPredictions, leaderboard, firstMatch, activeUsersCount, scoredPredictionsCount] =
     await Promise.all([
     prisma.phase_locks.findMany(),
     prisma.matches.findMany({
@@ -50,25 +50,36 @@ export default async function DashboardPage() {
         orderBy: { kickoff_at: "asc" },
         select: { kickoff_at: true },
       }),
+      prisma.users.count({
+        where: {
+          role: "user",
+          is_active: true,
+        },
+      }),
+      prisma.predictions.count({
+        where: {
+          points: {
+            gt: 0,
+          },
+        },
+      }),
     ]);
 
   const activePhase = getCurrentTournamentPhase(phaseLocks);
 
-  const availableMatches = openMatches.filter((match) =>
-    canUserPredict({
-      user,
-      match,
-      phaseLocks,
-    }),
-  );
-
-  const pendingPredictions = availableMatches.filter((match) => match.predictions.length === 0).length;
   const currentPoints = userPredictions.reduce((acc, item) => acc + item.points, 0);
 
   const tournamentStartIso = firstMatch?.kickoff_at.toISOString() ?? null;
   const topLeaderboard = leaderboard.slice(0, 5);
   const currentLeaderboardPosition = leaderboard.find((row) => row.userId === user.id)?.posicion ?? null;
-  const rankLabel = currentLeaderboardPosition ? `#${currentLeaderboardPosition}` : "-";
+  const hasRealRanking = scoredPredictionsCount > 0;
+  const rankLabel = hasRealRanking && currentLeaderboardPosition ? `#${currentLeaderboardPosition}` : "-";
+  const prizeAmount = activeUsersCount * 500;
+  const prizeLabel = new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: 2,
+  }).format(prizeAmount);
 
   return (
     <UserShell
@@ -82,10 +93,6 @@ export default async function DashboardPage() {
           <article className="glass-panel animate-fade-in-up rounded-xl p-4 text-center">
             <p className="text-sm text-zinc-400">Puntos actuales</p>
             <p className="mt-2 text-3xl font-bold text-emerald-400">{currentPoints}</p>
-          </article>
-          <article className="glass-panel animate-fade-in-up rounded-xl p-4 text-center">
-            <p className="text-sm text-zinc-400">Predicciones pendientes</p>
-            <p className="mt-2 text-3xl font-bold text-zinc-100">{pendingPredictions}</p>
           </article>
           <article className="glass-panel animate-fade-in-up rounded-xl p-4 text-center">
             <p className="text-sm text-zinc-400">Fase activa</p>
@@ -102,6 +109,11 @@ export default async function DashboardPage() {
             <p className="mt-2 text-3xl font-bold text-amber-300">
               <RankDisplay username={user.username} realRankLabel={rankLabel} />
             </p>
+          </article>
+          <article className="glass-panel animate-fade-in-up rounded-xl p-4 text-center">
+            <p className="text-sm text-zinc-400">PREMIO</p>
+            <p className="mt-2 text-2xl font-bold text-emerald-300">{prizeLabel}</p>
+            <p className="mt-1 text-xs text-zinc-500">500.00 MXN x {activeUsersCount} usuarios activos</p>
           </article>
         </section>
 
