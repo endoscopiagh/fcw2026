@@ -194,9 +194,9 @@ export default async function DashboardPage() {
                   <tr className="text-left text-zinc-400">
                     <th className="pb-2 pr-3">Pos</th>
                     <th className="pb-2 pr-3">Usuario</th>
-                    <th className="pb-2 pr-3">Puntos</th>
-                    <th className="pb-2 pr-3">Exactos</th>
-                    <th className="pb-2 pr-3">Resultados</th>
+                    <th className="pb-2 pr-3 text-center">Resultados</th>
+                    <th className="pb-2 pr-3 text-center">Exactos</th>
+                    <th className="pb-2 pr-3 text-center">Puntos</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -204,9 +204,9 @@ export default async function DashboardPage() {
                     <tr key={row.userId} className="border-t border-zinc-800 text-zinc-200">
                       <td className="py-2 pr-3">{row.posicion}</td>
                       <td className="py-2 pr-3">{row.displayName}</td>
-                      <td className="py-2 pr-3 font-semibold text-emerald-400">{row.puntos}</td>
-                      <td className="py-2 pr-3">{row.exactos}</td>
-                      <td className="py-2 pr-3">{row.resultadosCorrectos}</td>
+                      <td className="py-2 pr-3 text-center">{row.resultadosCorrectos}</td>
+                      <td className="py-2 pr-3 text-center">{row.exactos}</td>
+                      <td className="py-2 pr-3 text-center font-semibold text-emerald-400">{row.puntos}</td>
                     </tr>
                   ))}
                 </tbody>

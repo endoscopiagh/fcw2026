@@ -29,15 +29,13 @@ export function LeaderboardTable({ rows }: LeaderboardTableProps) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
+          {rows.map((row) => (
             <tr key={row.userId} className="border-t border-zinc-800 text-zinc-200">
               <td className="py-2 pr-3 font-semibold text-emerald-400">#{row.posicion}</td>
               <td className="py-2 pr-3">{row.displayName}</td>
               <td className="py-2 pr-3 text-center">{row.exactos}</td>
               <td className="py-2 pr-3 text-center">{row.resultadosCorrectos}</td>
-              <td className={`py-2 pr-3 text-center ${index < 3 ? "font-semibold text-amber-300" : ""}`}>
-                {row.puntos}
-              </td>
+              <td className="py-2 pr-3 text-center font-semibold text-emerald-400">{row.puntos}</td>
             </tr>
           ))}
         </tbody>
