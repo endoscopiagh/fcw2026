@@ -33,8 +33,19 @@ type AdminResultEditorProps = {
 };
 
 const STATUS_OPTIONS: MatchStatus[] = ["scheduled", "open", "closed", "finished"];
+const ADMIN_AUDIT_TIME_ZONE = "America/Mexico_City";
 
 export function AdminResultEditor({ match }: AdminResultEditorProps) {
+  const kickoffLabel = match.kickoff_at.toLocaleString("es-MX", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: ADMIN_AUDIT_TIME_ZONE,
+    timeZoneName: "short",
+  });
+
   return (
     <form action={updateMatchResultAction} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
       <input type="hidden" name="match_id" value={match.id} />
@@ -59,6 +70,7 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
             {match.phase}
             {match.group_letter ? ` • Grupo ${match.group_letter}` : ""}
           </p>
+          <p className="text-xs text-zinc-500">Kickoff: {kickoffLabel}</p>
         </div>
         <span className="rounded-full border border-zinc-700 px-2 py-1 text-xs uppercase text-zinc-300">
           {match.status}
@@ -117,20 +129,15 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
           <div className="mt-2 space-y-2">
             {match.predictions.map((prediction) => (
               (() => {
-                const isLateSubmission = prediction.created_at > match.kickoff_at;
-                const createdAtLabel = prediction.created_at.toLocaleString("es-MX", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
+                const isLateSubmission = prediction.updated_at > match.kickoff_at;
                 const updatedAtLabel = prediction.updated_at.toLocaleString("es-MX", {
                   year: "numeric",
                   month: "2-digit",
                   day: "2-digit",
                   hour: "2-digit",
                   minute: "2-digit",
+                  timeZone: ADMIN_AUDIT_TIME_ZONE,
+                  timeZoneName: "short",
                 });
 
                 return (
@@ -151,11 +158,7 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
                   <p className="rounded border border-rose-500/50 bg-rose-950/40 px-2 py-1 text-[11px] font-semibold text-rose-300">
                     Tarde (después del kickoff)
                   </p>
-                ) : (
-                  <p className="rounded border border-emerald-500/40 bg-emerald-950/30 px-2 py-1 text-[11px] font-semibold text-emerald-300">
-                    En tiempo
-                  </p>
-                )}
+                ) : null}
                 {match.status === "finished" ? (
                   <p>
                     Puntos: <span className="font-semibold text-emerald-300">{prediction.points}</span>
@@ -166,7 +169,7 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
                   <p className="text-zinc-400">Puntos: Pendiente</p>
                 )}
                 <p className="w-full text-zinc-400">
-                  Enviado: {createdAtLabel} • Ult. cambio: {updatedAtLabel}
+                  Ult. cambio: {updatedAtLabel}
                 </p>
               </div>
                 );
