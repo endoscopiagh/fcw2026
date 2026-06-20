@@ -7,6 +7,7 @@ type AdminResultEditorProps = {
   match: {
     id: string;
     match_number: number;
+    kickoff_at: Date;
     status: MatchStatus;
     phase: string;
     group_letter: string | null;
@@ -22,6 +23,7 @@ type AdminResultEditorProps = {
       is_exact: boolean;
       is_result_correct: boolean;
       created_at: Date;
+      updated_at: Date;
       user: {
         display_name: string;
         username: string;
@@ -114,6 +116,24 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
         ) : (
           <div className="mt-2 space-y-2">
             {match.predictions.map((prediction) => (
+              (() => {
+                const isLateSubmission = prediction.created_at > match.kickoff_at;
+                const createdAtLabel = prediction.created_at.toLocaleString("es-MX", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                const updatedAtLabel = prediction.updated_at.toLocaleString("es-MX", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+
+                return (
               <div
                 key={prediction.id}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-300"
@@ -127,6 +147,15 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
                     {prediction.predicted_home_score} - {prediction.predicted_away_score}
                   </span>
                 </p>
+                {isLateSubmission ? (
+                  <p className="rounded border border-rose-500/50 bg-rose-950/40 px-2 py-1 text-[11px] font-semibold text-rose-300">
+                    Tarde (después del kickoff)
+                  </p>
+                ) : (
+                  <p className="rounded border border-emerald-500/40 bg-emerald-950/30 px-2 py-1 text-[11px] font-semibold text-emerald-300">
+                    En tiempo
+                  </p>
+                )}
                 {match.status === "finished" ? (
                   <p>
                     Puntos: <span className="font-semibold text-emerald-300">{prediction.points}</span>
@@ -136,7 +165,12 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
                 ) : (
                   <p className="text-zinc-400">Puntos: Pendiente</p>
                 )}
+                <p className="w-full text-zinc-400">
+                  Enviado: {createdAtLabel} • Ult. cambio: {updatedAtLabel}
+                </p>
               </div>
+                );
+              })()
             ))}
           </div>
         )}

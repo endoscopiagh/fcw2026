@@ -38,6 +38,7 @@ export default async function AdminResultsPage({ searchParams }: AdminResultsPag
             is_exact: true,
             is_result_correct: true,
             created_at: true,
+            updated_at: true,
             user: {
               select: {
                 display_name: true,
