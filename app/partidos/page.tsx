@@ -68,8 +68,9 @@ export default async function PartidosPage({ searchParams }: PartidosPageProps) 
   ]);
 
   const filteredMatches = matches.filter((match) => {
-    if (view === "finalizados") return match.status === "finished";
-    if (view === "pendientes") return match.status !== "finished";
+    const isFinished = match.home_score !== null && match.away_score !== null;
+    if (view === "finalizados") return isFinished;
+    if (view === "pendientes") return !isFinished;
     return true;
   });
 
@@ -173,8 +174,9 @@ export default async function PartidosPage({ searchParams }: PartidosPageProps) 
                 match,
                 phaseLocks,
               });
+              const hasFinalScore = match.home_score !== null && match.away_score !== null;
               const predictionStateLabel =
-                match.status === "finished"
+                hasFinalScore
                   ? "finalizado"
                   : closed || !canPredict
                     ? "cerrado"

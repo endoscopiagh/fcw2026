@@ -6,6 +6,9 @@ import { TOURNAMENT_PHASE_ORDER } from "@/lib/constants/tournament";
 type MatchForLockCheck = {
   phase: MatchPhase;
   status: MatchStatus;
+  kickoff_at: Date;
+  home_score: number | null;
+  away_score: number | null;
   home_team_id: string | null;
   away_team_id: string | null;
 };
@@ -17,10 +20,10 @@ type UserForPredictionCheck = {
 };
 
 export function isMatchPredictionClosed(match: MatchForLockCheck): boolean {
-  if (match.status === "finished" || match.status === "closed") {
+  if (match.home_score !== null && match.away_score !== null) {
     return true;
   }
-  return false;
+  return new Date() >= match.kickoff_at;
 }
 
 export function getCurrentTournamentPhase(locks: phase_locks[]): MatchPhase {
@@ -68,14 +71,16 @@ export async function enableNextPhaseIfPreviousFinished(): Promise<MatchPhase | 
 
   const currentPhaseMatches = await prisma.matches.findMany({
     where: { phase: currentPhase },
-    select: { status: true },
+    select: { home_score: true, away_score: true },
   });
 
   if (currentPhaseMatches.length === 0) {
     return null;
   }
 
-  const allFinished = currentPhaseMatches.every((match) => match.status === "finished");
+  const allFinished = currentPhaseMatches.every(
+    (match) => match.home_score !== null && match.away_score !== null,
+  );
   if (!allFinished) {
     return null;
   }

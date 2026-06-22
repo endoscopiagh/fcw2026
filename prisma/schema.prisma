@@ -91,6 +91,7 @@ model predictions {
   is_exact              Boolean  @default(false)
   is_result_correct     Boolean  @default(false)
   created_at            DateTime @default(now())
+  user_updated_at       DateTime @default(now())
   updated_at            DateTime @updatedAt
 
   user  users   @relation(fields: [user_id], references: [id], onDelete: Cascade)

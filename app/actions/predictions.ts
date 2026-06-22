@@ -73,6 +73,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
   let points = 0;
   let is_exact = false;
   let is_result_correct = false;
+  const userUpdatedAt = new Date();
 
   if (match.home_score !== null && match.away_score !== null) {
     const scoring = calculatePredictionPoints(
@@ -103,6 +104,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
       match_id: match.id,
       predicted_home_score: parsed.data.predicted_home_score,
       predicted_away_score: parsed.data.predicted_away_score,
+      user_updated_at: userUpdatedAt,
       points,
       is_exact,
       is_result_correct,
@@ -110,6 +112,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
     update: {
       predicted_home_score: parsed.data.predicted_home_score,
       predicted_away_score: parsed.data.predicted_away_score,
+      user_updated_at: userUpdatedAt,
       points,
       is_exact,
       is_result_correct,

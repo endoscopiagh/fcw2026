@@ -12,9 +12,8 @@ export default async function AdminPage() {
       }),
       prisma.matches.count({
         where: {
-          status: {
-            in: ["scheduled", "open", "closed"],
-          },
+          home_score: null,
+          away_score: null,
         },
       }),
       prisma.predictions.count(),

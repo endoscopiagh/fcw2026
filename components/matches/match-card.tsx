@@ -34,8 +34,9 @@ type MatchCardProps = {
 };
 
 export function MatchCard({ match, prediction, predictionStateLabel, communityPredictions }: MatchCardProps) {
+  const hasFinalScore = match.home_score !== null && match.away_score !== null;
   const shouldShowCommunityPredictions =
-    (match.status === "closed" || match.status === "finished") && Boolean(communityPredictions?.length);
+    Boolean(communityPredictions?.length) && (hasFinalScore || predictionStateLabel === "cerrado");
 
   return (
     <article className="glass-panel rounded-xl p-4">
@@ -109,7 +110,7 @@ export function MatchCard({ match, prediction, predictionStateLabel, communityPr
                       {entry.predictedHomeScore} - {entry.predictedAwayScore}
                     </span>
                   </p>
-                  {match.status === "finished" ? (
+                  {hasFinalScore ? (
                     <p>
                       Puntos: <span className="font-semibold text-emerald-300">{entry.points}</span>
                       {entry.isExact ? " • Exacto" : ""}

@@ -148,9 +148,8 @@ export async function resetUserPasswordAction(formData: FormData): Promise<void>
 
 const updateMatchSchema = z.object({
   match_id: z.string().min(1),
-  home_score: z.number().int().min(0).nullable(),
-  away_score: z.number().int().min(0).nullable(),
-  status: z.nativeEnum(MatchStatus),
+  home_score: z.number().int().min(0),
+  away_score: z.number().int().min(0),
 });
 
 function parseScore(value: FormDataEntryValue | null): number | null {
@@ -173,18 +172,10 @@ export async function updateMatchResultAction(formData: FormData): Promise<void>
     match_id: formData.get("match_id"),
     home_score: parseScore(formData.get("home_score")),
     away_score: parseScore(formData.get("away_score")),
-    status: formData.get("status"),
   });
 
   if (!parsed.success) {
     throw new Error("Datos inválidos para actualizar resultado.");
-  }
-
-  if (
-    parsed.data.status === "finished" &&
-    (parsed.data.home_score === null || parsed.data.away_score === null)
-  ) {
-    throw new Error("Para finalizar el partido debes capturar ambos marcadores.");
   }
 
   await prisma.matches.update({
@@ -192,13 +183,11 @@ export async function updateMatchResultAction(formData: FormData): Promise<void>
     data: {
       home_score: parsed.data.home_score,
       away_score: parsed.data.away_score,
-      status: parsed.data.status,
+      status: MatchStatus.finished,
     },
   });
 
-  if (parsed.data.status === "finished") {
-    await recalculatePredictionsForMatch(parsed.data.match_id);
-  }
+  await recalculatePredictionsForMatch(parsed.data.match_id);
 
   revalidatePath("/admin");
   revalidatePath("/admin/results");

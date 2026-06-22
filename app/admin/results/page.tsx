@@ -1,4 +1,3 @@
-import { MatchPhase } from "@prisma/client";
 import Link from "next/link";
 
 import { updatePhaseLockAction } from "@/app/actions/admin";
@@ -8,20 +7,57 @@ import { prisma } from "@/lib/db/prisma";
 
 type AdminResultsPageProps = {
   searchParams: Promise<{
-    phase?: string;
+    date?: string;
   }>;
 };
 
+const ADMIN_TIME_ZONE = "America/Mexico_City";
+
+function getMexicoDateKey(date: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ADMIN_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function normalizeDateKey(input?: string): string {
+  if (!input || !/^\d{4}-\d{2}-\d{2}$/.test(input)) {
+    return getMexicoDateKey(new Date());
+  }
+  return input;
+}
+
+function addDays(dateKey: string, days: number): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const utcDate = new Date(Date.UTC(year, month - 1, day + days));
+  return utcDate.toISOString().slice(0, 10);
+}
+
+function getMexicoDayRange(dateKey: string): { start: Date; end: Date } {
+  const start = new Date(`${dateKey}T00:00:00-06:00`);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
 export default async function AdminResultsPage({ searchParams }: AdminResultsPageProps) {
-  const { phase } = await searchParams;
-  const selectedPhase = Object.values(MatchPhase).includes(phase as MatchPhase)
-    ? (phase as MatchPhase)
-    : undefined;
+  const { date } = await searchParams;
+  const selectedDate = normalizeDateKey(date);
+  const previousDate = addDays(selectedDate, -1);
+  const nextDate = addDays(selectedDate, 1);
+  const { start, end } = getMexicoDayRange(selectedDate);
 
   const [matches, phaseLocks] = await Promise.all([
     prisma.matches.findMany({
-      where: selectedPhase ? { phase: selectedPhase } : undefined,
-      orderBy: [{ match_number: "asc" }],
+      where: {
+        kickoff_at: {
+          gte: start,
+          lt: end,
+        },
+      },
+      orderBy: [{ kickoff_at: "asc" }, { match_number: "asc" }],
       include: {
         home_team: {
           select: { name: true, flag_emoji: true },
@@ -37,8 +73,7 @@ export default async function AdminResultsPage({ searchParams }: AdminResultsPag
             points: true,
             is_exact: true,
             is_result_correct: true,
-            created_at: true,
-            updated_at: true,
+            user_updated_at: true,
             user: {
               select: {
                 display_name: true,
@@ -46,7 +81,7 @@ export default async function AdminResultsPage({ searchParams }: AdminResultsPag
               },
             },
           },
-          orderBy: [{ created_at: "desc" }],
+          orderBy: [{ user_updated_at: "desc" }],
         },
       },
     }),
@@ -98,25 +133,25 @@ export default async function AdminResultsPage({ searchParams }: AdminResultsPag
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <h2 className="text-lg font-semibold">Captura de resultados</h2>
         <p className="mt-1 text-sm text-zinc-400">
-          Edita marcador real, cambia estado y finaliza partidos para recalcular puntos. Incluye placeholders de eliminatorias.
+          Captura o corrige marcador final. Al guardar se recalculan los puntos automáticamente.
         </p>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <Link
-            href="/admin/results"
+            href={`/admin/results?date=${previousDate}`}
             className="rounded-lg border border-zinc-700 px-3 py-1 text-sm text-zinc-200 hover:border-emerald-500 hover:text-emerald-300"
           >
-            Todas
+            ← Día anterior
           </Link>
-          {TOURNAMENT_PHASE_ORDER.map((phaseName) => (
-            <Link
-              key={phaseName}
-              href={`/admin/results?phase=${phaseName}`}
-              className="rounded-lg border border-zinc-700 px-3 py-1 text-sm text-zinc-200 hover:border-emerald-500 hover:text-emerald-300"
-            >
-              {PHASE_LABELS_ES[phaseName]}
-            </Link>
-          ))}
+          <p className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-1 text-sm text-zinc-200">
+            Fecha: {selectedDate}
+          </p>
+          <Link
+            href={`/admin/results?date=${nextDate}`}
+            className="rounded-lg border border-zinc-700 px-3 py-1 text-sm text-zinc-200 hover:border-emerald-500 hover:text-emerald-300"
+          >
+            Día siguiente →
+          </Link>
         </div>
 
         <div className="mt-4 space-y-3">

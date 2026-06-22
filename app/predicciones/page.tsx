@@ -99,9 +99,10 @@ export default async function PrediccionesPage() {
                 match,
                 phaseLocks,
               });
+              const hasFinalScore = match.home_score !== null && match.away_score !== null;
 
               const statusLabel =
-                match.status === "finished"
+                hasFinalScore
                   ? "finalizado"
                   : closedByTime
                     ? "cerrado"

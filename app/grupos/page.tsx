@@ -19,7 +19,8 @@ export default async function GruposPage() {
       where: { phase: "GROUP_STAGE" },
       select: {
         group_letter: true,
-        status: true,
+        home_score: true,
+        away_score: true,
       },
     }),
   ]);
@@ -37,7 +38,9 @@ export default async function GruposPage() {
         {groups.map((groupLetter) => {
           const teams = teamsByGroup.filter((team) => team.group_letter === groupLetter);
           const matches = groupMatches.filter((match) => match.group_letter === groupLetter);
-          const playedMatches = matches.filter((match) => match.status === "finished").length;
+          const playedMatches = matches.filter(
+            (match) => match.home_score !== null && match.away_score !== null,
+          ).length;
 
           return (
             <GroupCard

@@ -12,15 +12,16 @@ import { getLeaderboardRows } from "@/lib/domain/predictions";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
+  const now = new Date();
 
   const [phaseLocks, openMatches, userPredictions, leaderboard, firstMatch, activeUsersCount, scoredPredictionsCount] =
     await Promise.all([
     prisma.phase_locks.findMany(),
     prisma.matches.findMany({
       where: {
-        status: {
-          in: ["scheduled", "open"],
-        },
+        kickoff_at: { gt: now },
+        home_score: null,
+        away_score: null,
       },
       include: {
         home_team: {

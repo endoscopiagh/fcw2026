@@ -1,5 +1,3 @@
-import { MatchStatus } from "@prisma/client";
-
 import { updateMatchResultAction } from "@/app/actions/admin";
 import { Flag } from "@/components/ui/flag";
 
@@ -8,7 +6,6 @@ type AdminResultEditorProps = {
     id: string;
     match_number: number;
     kickoff_at: Date;
-    status: MatchStatus;
     phase: string;
     group_letter: string | null;
     home_score: number | null;
@@ -22,8 +19,7 @@ type AdminResultEditorProps = {
       points: number;
       is_exact: boolean;
       is_result_correct: boolean;
-      created_at: Date;
-      updated_at: Date;
+      user_updated_at: Date;
       user: {
         display_name: string;
         username: string;
@@ -32,10 +28,10 @@ type AdminResultEditorProps = {
   };
 };
 
-const STATUS_OPTIONS: MatchStatus[] = ["scheduled", "open", "closed", "finished"];
 const ADMIN_AUDIT_TIME_ZONE = "America/Mexico_City";
 
 export function AdminResultEditor({ match }: AdminResultEditorProps) {
+  const hasFinalScore = match.home_score !== null && match.away_score !== null;
   const kickoffLabel = match.kickoff_at.toLocaleString("es-MX", {
     year: "numeric",
     month: "2-digit",
@@ -73,18 +69,19 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
           <p className="text-xs text-zinc-500">Kickoff: {kickoffLabel}</p>
         </div>
         <span className="rounded-full border border-zinc-700 px-2 py-1 text-xs uppercase text-zinc-300">
-          {match.status}
+          {hasFinalScore ? "finalizado" : "pendiente"}
         </span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2">
         <label className="text-sm text-zinc-300">
           Local
           <input
             type="number"
             min={0}
+            required
             name="home_score"
-            defaultValue={match.home_score ?? ""}
+            defaultValue={match.home_score ?? 0}
             className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100"
           />
         </label>
@@ -93,24 +90,11 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
           <input
             type="number"
             min={0}
+            required
             name="away_score"
-            defaultValue={match.away_score ?? ""}
+            defaultValue={match.away_score ?? 0}
             className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100"
           />
-        </label>
-        <label className="text-sm text-zinc-300 sm:col-span-2">
-          Estado
-          <select
-            name="status"
-            defaultValue={match.status}
-            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100"
-          >
-            {STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
         </label>
       </div>
 
@@ -129,8 +113,8 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
           <div className="mt-2 space-y-2">
             {match.predictions.map((prediction) => (
               (() => {
-                const isLateSubmission = prediction.updated_at > match.kickoff_at;
-                const updatedAtLabel = prediction.updated_at.toLocaleString("es-MX", {
+                const isLateSubmission = prediction.user_updated_at > match.kickoff_at;
+                const userUpdatedAtLabel = prediction.user_updated_at.toLocaleString("es-MX", {
                   year: "numeric",
                   month: "2-digit",
                   day: "2-digit",
@@ -159,7 +143,7 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
                     Tarde (después del kickoff)
                   </p>
                 ) : null}
-                {match.status === "finished" ? (
+                {hasFinalScore ? (
                   <p>
                     Puntos: <span className="font-semibold text-emerald-300">{prediction.points}</span>
                     {prediction.is_exact ? " • Exacto" : ""}
@@ -169,7 +153,7 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
                   <p className="text-zinc-400">Puntos: Pendiente</p>
                 )}
                 <p className="w-full text-zinc-400">
-                  Ult. cambio: {updatedAtLabel}
+                  Ult. cambio: {userUpdatedAtLabel}
                 </p>
               </div>
                 );
