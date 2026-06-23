@@ -8,11 +8,64 @@ import { PHASE_LABELS_ES } from "@/lib/constants/tournament";
 import { prisma } from "@/lib/db/prisma";
 import { canUserPredict, isMatchPredictionClosed } from "@/lib/domain/deadlines";
 
-export default async function PrediccionesPage() {
+type PrediccionesPageProps = {
+  searchParams: Promise<{
+    date?: string;
+  }>;
+};
+
+const VIEW_TIME_ZONE = "America/Mexico_City";
+
+function getMexicoDateKey(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: VIEW_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value ?? "1970";
+  const month = parts.find((part) => part.type === "month")?.value ?? "01";
+  const day = parts.find((part) => part.type === "day")?.value ?? "01";
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeDateKey(input?: string): string {
+  if (!input || !/^\d{4}-\d{2}-\d{2}$/.test(input)) {
+    return getMexicoDateKey(new Date());
+  }
+  return input;
+}
+
+function addDays(dateKey: string, days: number): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const utcDate = new Date(Date.UTC(year, month - 1, day + days));
+  return utcDate.toISOString().slice(0, 10);
+}
+
+function getMexicoDayRange(dateKey: string): { start: Date; end: Date } {
+  const start = new Date(`${dateKey}T00:00:00-06:00`);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
+export default async function PrediccionesPage({ searchParams }: PrediccionesPageProps) {
   const user = await requireAuth();
+  const { date } = await searchParams;
+  const selectedDate = normalizeDateKey(date);
+  const previousDate = addDays(selectedDate, -1);
+  const nextDate = addDays(selectedDate, 1);
+  const { start, end } = getMexicoDayRange(selectedDate);
+
   const [phaseLocks, matches, summary] = await Promise.all([
     prisma.phase_locks.findMany(),
     prisma.matches.findMany({
+      where: {
+        kickoff_at: {
+          gte: start,
+          lt: end,
+        },
+      },
       include: {
         home_team: {
           select: { name: true, flag_emoji: true },
@@ -32,7 +85,6 @@ export default async function PrediccionesPage() {
         },
       },
       orderBy: [{ kickoff_at: "asc" }],
-      take: 80,
     }),
     prisma.predictions.aggregate({
       where: { user_id: user.id },
@@ -82,16 +134,38 @@ export default async function PrediccionesPage() {
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">Tus predicciones por partido</h2>
-            <Link
-              href="/leaderboard"
-              className="text-sm text-emerald-400 transition hover:text-emerald-300"
-            >
-              Ver leaderboard
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/predicciones?date=${previousDate}`}
+                className="rounded-lg border border-zinc-700 px-3 py-1 text-sm text-zinc-200 hover:border-emerald-500 hover:text-emerald-300"
+              >
+                ← Día anterior
+              </Link>
+              <p className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-1 text-sm text-zinc-200">
+                Fecha: {selectedDate}
+              </p>
+              <Link
+                href={`/predicciones?date=${nextDate}`}
+                className="rounded-lg border border-zinc-700 px-3 py-1 text-sm text-zinc-200 hover:border-emerald-500 hover:text-emerald-300"
+              >
+                Día siguiente →
+              </Link>
+              <Link
+                href="/leaderboard"
+                className="text-sm text-emerald-400 transition hover:text-emerald-300"
+              >
+                Ver leaderboard
+              </Link>
+            </div>
           </div>
 
           <div className="space-y-3">
-            {matches.map((match) => {
+            {matches.length === 0 ? (
+              <p className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3 text-sm text-zinc-400">
+                No hay partidos para la fecha seleccionada.
+              </p>
+            ) : (
+              matches.map((match) => {
               const prediction = match.predictions[0];
               const closedByTime = isMatchPredictionClosed(match);
               const canPredict = canUserPredict({
@@ -172,7 +246,8 @@ export default async function PrediccionesPage() {
                   ) : null}
                 </article>
               );
-            })}
+              })
+            )}
           </div>
         </section>
       </div>

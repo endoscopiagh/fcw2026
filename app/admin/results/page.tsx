@@ -14,12 +14,16 @@ type AdminResultsPageProps = {
 const ADMIN_TIME_ZONE = "America/Mexico_City";
 
 function getMexicoDateKey(date: Date): string {
-  return new Intl.DateTimeFormat("en-CA", {
+  const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: ADMIN_TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(date);
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value ?? "1970";
+  const month = parts.find((part) => part.type === "month")?.value ?? "01";
+  const day = parts.find((part) => part.type === "day")?.value ?? "01";
+  return `${year}-${month}-${day}`;
 }
 
 function normalizeDateKey(input?: string): string {
@@ -65,23 +69,10 @@ export default async function AdminResultsPage({ searchParams }: AdminResultsPag
         away_team: {
           select: { name: true, flag_emoji: true },
         },
-        predictions: {
+        _count: {
           select: {
-            id: true,
-            predicted_home_score: true,
-            predicted_away_score: true,
-            points: true,
-            is_exact: true,
-            is_result_correct: true,
-            user_updated_at: true,
-            user: {
-              select: {
-                display_name: true,
-                username: true,
-              },
-            },
+            predictions: true,
           },
-          orderBy: [{ user_updated_at: "desc" }],
         },
       },
     }),
@@ -158,7 +149,9 @@ export default async function AdminResultsPage({ searchParams }: AdminResultsPag
           {matches.length === 0 ? (
             <p className="text-zinc-400">No hay partidos para el filtro actual.</p>
           ) : (
-            matches.map((match) => <AdminResultEditor key={match.id} match={match} />)
+            matches.map((match) => (
+              <AdminResultEditor key={match.id} match={match} selectedDate={selectedDate} />
+            ))
           )}
         </div>
       </section>

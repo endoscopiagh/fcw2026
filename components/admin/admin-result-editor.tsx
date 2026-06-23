@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { updateMatchResultAction } from "@/app/actions/admin";
 import { Flag } from "@/components/ui/flag";
 
@@ -12,25 +14,16 @@ type AdminResultEditorProps = {
     away_score: number | null;
     home_team: { name: string; flag_emoji: string } | null;
     away_team: { name: string; flag_emoji: string } | null;
-    predictions: Array<{
-      id: string;
-      predicted_home_score: number;
-      predicted_away_score: number;
-      points: number;
-      is_exact: boolean;
-      is_result_correct: boolean;
-      user_updated_at: Date;
-      user: {
-        display_name: string;
-        username: string;
-      };
-    }>;
+    _count: {
+      predictions: number;
+    };
   };
+  selectedDate: string;
 };
 
 const ADMIN_AUDIT_TIME_ZONE = "America/Mexico_City";
 
-export function AdminResultEditor({ match }: AdminResultEditorProps) {
+export function AdminResultEditor({ match, selectedDate }: AdminResultEditorProps) {
   const hasFinalScore = match.home_score !== null && match.away_score !== null;
   const kickoffLabel = match.kickoff_at.toLocaleString("es-MX", {
     year: "numeric",
@@ -105,62 +98,17 @@ export function AdminResultEditor({ match }: AdminResultEditorProps) {
         Guardar resultado
       </button>
 
-      <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
-        <p className="text-sm font-semibold text-zinc-100">Predicciones registradas</p>
-        {match.predictions.length === 0 ? (
-          <p className="mt-2 text-xs text-zinc-500">Aún no hay predicciones para este partido.</p>
-        ) : (
-          <div className="mt-2 space-y-2">
-            {match.predictions.map((prediction) => (
-              (() => {
-                const isLateSubmission = prediction.user_updated_at > match.kickoff_at;
-                const userUpdatedAtLabel = prediction.user_updated_at.toLocaleString("es-MX", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: ADMIN_AUDIT_TIME_ZONE,
-                  timeZoneName: "short",
-                });
-
-                return (
-              <div
-                key={prediction.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-300"
-              >
-                <p className="font-medium text-zinc-200">
-                  {prediction.user.display_name} ({prediction.user.username})
-                </p>
-                <p>
-                  Predicción:{" "}
-                  <span className="font-semibold text-zinc-100">
-                    {prediction.predicted_home_score} - {prediction.predicted_away_score}
-                  </span>
-                </p>
-                {isLateSubmission ? (
-                  <p className="rounded border border-rose-500/50 bg-rose-950/40 px-2 py-1 text-[11px] font-semibold text-rose-300">
-                    Tarde (después del kickoff)
-                  </p>
-                ) : null}
-                {hasFinalScore ? (
-                  <p>
-                    Puntos: <span className="font-semibold text-emerald-300">{prediction.points}</span>
-                    {prediction.is_exact ? " • Exacto" : ""}
-                    {!prediction.is_exact && prediction.is_result_correct ? " • Resultado correcto" : ""}
-                  </p>
-                ) : (
-                  <p className="text-zinc-400">Puntos: Pendiente</p>
-                )}
-                <p className="w-full text-zinc-400">
-                  Ult. cambio: {userUpdatedAtLabel}
-                </p>
-              </div>
-                );
-              })()
-            ))}
-          </div>
-        )}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
+        <p className="text-sm text-zinc-300">
+          Predicciones registradas:{" "}
+          <span className="font-semibold text-zinc-100">{match._count.predictions}</span>
+        </p>
+        <Link
+          href={`/admin/results/${match.id}?date=${selectedDate}`}
+          className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-100 hover:border-emerald-500 hover:text-emerald-300"
+        >
+          Ver predicciones
+        </Link>
       </div>
     </form>
   );
