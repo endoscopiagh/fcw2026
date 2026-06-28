@@ -74,8 +74,19 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
   }
 
   const requiresAdvancingSide = match.phase !== "GROUP_STAGE";
-  if (requiresAdvancingSide && !parsed.data.predicted_advancing_side) {
-    throw new Error("Debes seleccionar qué equipo avanza en fase eliminatoria.");
+  const isTiePrediction = parsed.data.predicted_home_score === parsed.data.predicted_away_score;
+  let resolvedPredictedAdvancingSide: "HOME" | "AWAY" | null = null;
+
+  if (requiresAdvancingSide) {
+    if (isTiePrediction) {
+      if (!parsed.data.predicted_advancing_side) {
+        throw new Error("Debes seleccionar qué equipo avanza en fase eliminatoria.");
+      }
+      resolvedPredictedAdvancingSide = parsed.data.predicted_advancing_side;
+    } else {
+      resolvedPredictedAdvancingSide =
+        parsed.data.predicted_home_score > parsed.data.predicted_away_score ? "HOME" : "AWAY";
+    }
   }
 
   let points = 0;
@@ -95,7 +106,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
       },
       {
         isKnockout: match.phase !== "GROUP_STAGE",
-        predictedAdvancingSide: parsed.data.predicted_advancing_side ?? null,
+        predictedAdvancingSide: resolvedPredictedAdvancingSide,
         actualAdvancingSide: match.advancing_side,
       },
     );
@@ -117,7 +128,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
       match_id: match.id,
       predicted_home_score: parsed.data.predicted_home_score,
       predicted_away_score: parsed.data.predicted_away_score,
-      predicted_advancing_side: parsed.data.predicted_advancing_side ?? null,
+      predicted_advancing_side: resolvedPredictedAdvancingSide,
       user_updated_at: userUpdatedAt,
       points,
       is_exact,
@@ -126,7 +137,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
     update: {
       predicted_home_score: parsed.data.predicted_home_score,
       predicted_away_score: parsed.data.predicted_away_score,
-      predicted_advancing_side: parsed.data.predicted_advancing_side ?? null,
+      predicted_advancing_side: resolvedPredictedAdvancingSide,
       user_updated_at: userUpdatedAt,
       points,
       is_exact,

@@ -190,8 +190,18 @@ export async function updateMatchResultAction(formData: FormData): Promise<void>
   }
 
   const requiresAdvancingSide = match.phase !== "GROUP_STAGE";
-  if (requiresAdvancingSide && !parsed.data.advancing_side) {
-    throw new Error("Debes seleccionar qué equipo avanza en fase eliminatoria.");
+  const isTieResult = parsed.data.home_score === parsed.data.away_score;
+  let resolvedAdvancingSide: "HOME" | "AWAY" | null = null;
+
+  if (requiresAdvancingSide) {
+    if (isTieResult) {
+      if (!parsed.data.advancing_side) {
+        throw new Error("Debes seleccionar qué equipo avanza en fase eliminatoria.");
+      }
+      resolvedAdvancingSide = parsed.data.advancing_side;
+    } else {
+      resolvedAdvancingSide = parsed.data.home_score > parsed.data.away_score ? "HOME" : "AWAY";
+    }
   }
 
   await prisma.matches.update({
@@ -199,7 +209,7 @@ export async function updateMatchResultAction(formData: FormData): Promise<void>
     data: {
       home_score: parsed.data.home_score,
       away_score: parsed.data.away_score,
-      advancing_side: requiresAdvancingSide ? parsed.data.advancing_side : null,
+      advancing_side: resolvedAdvancingSide,
       status: MatchStatus.finished,
     },
   });
