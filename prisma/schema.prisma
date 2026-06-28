@@ -28,6 +28,11 @@ enum MatchStatus {
   finished
 }
 
+enum AdvancingSide {
+  HOME
+  AWAY
+}
+
 model users {
   id            String   @id @default(cuid())
   username      String   @unique
@@ -67,6 +72,7 @@ model matches {
   city         String
   home_score   Int?
   away_score   Int?
+  advancing_side AdvancingSide?
   status       MatchStatus @default(scheduled)
   created_at   DateTime    @default(now())
   updated_at   DateTime    @updatedAt
@@ -87,6 +93,7 @@ model predictions {
   match_id              String
   predicted_home_score  Int
   predicted_away_score  Int
+  predicted_advancing_side AdvancingSide?
   points                Int      @default(0)
   is_exact              Boolean  @default(false)
   is_result_correct     Boolean  @default(false)

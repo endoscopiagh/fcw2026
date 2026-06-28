@@ -35,6 +35,7 @@ type MatchCardProps = {
 
 export function MatchCard({ match, prediction, predictionStateLabel, communityPredictions }: MatchCardProps) {
   const hasFinalScore = match.home_score !== null && match.away_score !== null;
+  const isKnockout = match.phase !== "GROUP_STAGE";
   const shouldShowCommunityPredictions =
     Boolean(communityPredictions?.length) && (hasFinalScore || predictionStateLabel === "cerrado");
 
@@ -114,7 +115,11 @@ export function MatchCard({ match, prediction, predictionStateLabel, communityPr
                     <p>
                       Puntos: <span className="font-semibold text-emerald-300">{entry.points}</span>
                       {entry.isExact ? " • Exacto" : ""}
-                      {!entry.isExact && entry.isResultCorrect ? " • Resultado correcto" : ""}
+                      {!entry.isExact && entry.isResultCorrect
+                        ? isKnockout
+                          ? " • Avance correcto"
+                          : " • Resultado correcto"
+                        : ""}
                     </p>
                   ) : (
                     <p className="text-zinc-400">Puntos: Pendiente</p>

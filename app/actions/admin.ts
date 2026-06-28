@@ -150,6 +150,7 @@ const updateMatchSchema = z.object({
   match_id: z.string().min(1),
   home_score: z.number().int().min(0),
   away_score: z.number().int().min(0),
+  advancing_side: z.enum(["HOME", "AWAY"]).optional(),
 });
 
 function parseScore(value: FormDataEntryValue | null): number | null {
@@ -172,10 +173,25 @@ export async function updateMatchResultAction(formData: FormData): Promise<void>
     match_id: formData.get("match_id"),
     home_score: parseScore(formData.get("home_score")),
     away_score: parseScore(formData.get("away_score")),
+    advancing_side: formData.get("advancing_side") || undefined,
   });
 
   if (!parsed.success) {
     throw new Error("Datos inválidos para actualizar resultado.");
+  }
+
+  const match = await prisma.matches.findUnique({
+    where: { id: parsed.data.match_id },
+    select: { phase: true },
+  });
+
+  if (!match) {
+    throw new Error("Partido no encontrado.");
+  }
+
+  const requiresAdvancingSide = match.phase !== "GROUP_STAGE";
+  if (requiresAdvancingSide && !parsed.data.advancing_side) {
+    throw new Error("Debes seleccionar qué equipo avanza en fase eliminatoria.");
   }
 
   await prisma.matches.update({
@@ -183,6 +199,7 @@ export async function updateMatchResultAction(formData: FormData): Promise<void>
     data: {
       home_score: parsed.data.home_score,
       away_score: parsed.data.away_score,
+      advancing_side: requiresAdvancingSide ? parsed.data.advancing_side : null,
       status: MatchStatus.finished,
     },
   });

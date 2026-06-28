@@ -78,6 +78,7 @@ export default async function PrediccionesPage({ searchParams }: PrediccionesPag
           select: {
             predicted_home_score: true,
             predicted_away_score: true,
+            predicted_advancing_side: true,
             points: true,
             is_exact: true,
             is_result_correct: true,
@@ -174,6 +175,13 @@ export default async function PrediccionesPage({ searchParams }: PrediccionesPag
                 phaseLocks,
               });
               const hasFinalScore = match.home_score !== null && match.away_score !== null;
+              const isKnockout = match.phase !== "GROUP_STAGE";
+              const predictedAdvancingTeamName =
+                prediction?.predicted_advancing_side === "HOME"
+                  ? match.home_team?.name
+                  : prediction?.predicted_advancing_side === "AWAY"
+                    ? match.away_team?.name
+                    : null;
 
               const statusLabel =
                 hasFinalScore
@@ -225,8 +233,12 @@ export default async function PrediccionesPage({ searchParams }: PrediccionesPag
                   <PredictionForm
                     matchId={match.id}
                     disabled={!canPredict}
+                    isKnockout={isKnockout}
+                    homeTeamName={match.home_team?.name ?? "Equipo local"}
+                    awayTeamName={match.away_team?.name ?? "Equipo visitante"}
                     defaultHomeScore={prediction?.predicted_home_score}
                     defaultAwayScore={prediction?.predicted_away_score}
+                    defaultAdvancingSide={prediction?.predicted_advancing_side}
                   />
 
                   {prediction ? (
@@ -240,8 +252,20 @@ export default async function PrediccionesPage({ searchParams }: PrediccionesPag
                       <p className="mt-1">
                         Puntos: <span className="font-semibold text-emerald-400">{prediction.points}</span>
                         {prediction.is_exact ? " • Exacto" : ""}
-                        {!prediction.is_exact && prediction.is_result_correct ? " • Resultado correcto" : ""}
+                        {!prediction.is_exact && prediction.is_result_correct
+                          ? isKnockout
+                            ? " • Avance correcto"
+                            : " • Resultado correcto"
+                          : ""}
                       </p>
+                      {isKnockout ? (
+                        <p className="mt-1">
+                          Avanza:{" "}
+                          <span className="font-semibold text-zinc-100">
+                            {predictedAdvancingTeamName ?? "Sin seleccionar"}
+                          </span>
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
                 </article>

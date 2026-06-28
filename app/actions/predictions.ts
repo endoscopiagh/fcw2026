@@ -12,6 +12,7 @@ const predictionSchema = z.object({
   match_id: z.string().min(1),
   predicted_home_score: z.coerce.number().int().min(0).max(30),
   predicted_away_score: z.coerce.number().int().min(0).max(30),
+  predicted_advancing_side: z.enum(["HOME", "AWAY"]).optional(),
 });
 
 export async function savePredictionAction(formData: FormData): Promise<void> {
@@ -24,6 +25,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
     match_id: formData.get("match_id"),
     predicted_home_score: formData.get("predicted_home_score"),
     predicted_away_score: formData.get("predicted_away_score"),
+    predicted_advancing_side: formData.get("predicted_advancing_side") || undefined,
   });
 
   if (!parsed.success) {
@@ -51,6 +53,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
         away_team_id: true,
         home_score: true,
         away_score: true,
+        advancing_side: true,
       },
     }),
     prisma.phase_locks.findMany(),
@@ -70,6 +73,11 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
     throw new Error("La predicción para este partido ya está cerrada.");
   }
 
+  const requiresAdvancingSide = match.phase !== "GROUP_STAGE";
+  if (requiresAdvancingSide && !parsed.data.predicted_advancing_side) {
+    throw new Error("Debes seleccionar qué equipo avanza en fase eliminatoria.");
+  }
+
   let points = 0;
   let is_exact = false;
   let is_result_correct = false;
@@ -84,6 +92,11 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
       {
         homeScore: match.home_score,
         awayScore: match.away_score,
+      },
+      {
+        isKnockout: match.phase !== "GROUP_STAGE",
+        predictedAdvancingSide: parsed.data.predicted_advancing_side ?? null,
+        actualAdvancingSide: match.advancing_side,
       },
     );
 
@@ -104,6 +117,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
       match_id: match.id,
       predicted_home_score: parsed.data.predicted_home_score,
       predicted_away_score: parsed.data.predicted_away_score,
+      predicted_advancing_side: parsed.data.predicted_advancing_side ?? null,
       user_updated_at: userUpdatedAt,
       points,
       is_exact,
@@ -112,6 +126,7 @@ export async function savePredictionAction(formData: FormData): Promise<void> {
     update: {
       predicted_home_score: parsed.data.predicted_home_score,
       predicted_away_score: parsed.data.predicted_away_score,
+      predicted_advancing_side: parsed.data.predicted_advancing_side ?? null,
       user_updated_at: userUpdatedAt,
       points,
       is_exact,

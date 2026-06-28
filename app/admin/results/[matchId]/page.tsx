@@ -48,6 +48,7 @@ export default async function AdminMatchPredictionsPage({
           id: true,
           predicted_home_score: true,
           predicted_away_score: true,
+          predicted_advancing_side: true,
           points: true,
           is_exact: true,
           is_result_correct: true,
@@ -69,6 +70,7 @@ export default async function AdminMatchPredictionsPage({
   }
 
   const hasFinalScore = match.home_score !== null && match.away_score !== null;
+  const isKnockout = match.phase !== "GROUP_STAGE";
   const kickoffLabel = formatDateTime(match.kickoff_at);
   const backHref = date ? `/admin/results?date=${date}` : "/admin/results";
 
@@ -108,6 +110,12 @@ export default async function AdminMatchPredictionsPage({
           {match.predictions.map((prediction) => {
             const isLateSubmission = prediction.user_updated_at > match.kickoff_at;
             const userUpdatedAtLabel = formatDateTime(prediction.user_updated_at);
+            const predictedAdvancingTeamName =
+              prediction.predicted_advancing_side === "HOME"
+                ? match.home_team?.name
+                : prediction.predicted_advancing_side === "AWAY"
+                  ? match.away_team?.name
+                  : null;
 
             return (
               <div
@@ -123,6 +131,14 @@ export default async function AdminMatchPredictionsPage({
                     {prediction.predicted_home_score} - {prediction.predicted_away_score}
                   </span>
                 </p>
+                {match.phase !== "GROUP_STAGE" ? (
+                  <p>
+                    Avanza:{" "}
+                    <span className="font-semibold text-zinc-100">
+                      {predictedAdvancingTeamName ?? "Sin seleccionar"}
+                    </span>
+                  </p>
+                ) : null}
                 {isLateSubmission ? (
                   <p className="rounded border border-rose-500/50 bg-rose-950/40 px-2 py-1 text-[11px] font-semibold text-rose-300">
                     Tarde (después del kickoff)
@@ -132,7 +148,11 @@ export default async function AdminMatchPredictionsPage({
                   <p>
                     Puntos: <span className="font-semibold text-emerald-300">{prediction.points}</span>
                     {prediction.is_exact ? " • Exacto" : ""}
-                    {!prediction.is_exact && prediction.is_result_correct ? " • Resultado correcto" : ""}
+                    {!prediction.is_exact && prediction.is_result_correct
+                      ? isKnockout
+                        ? " • Avance correcto"
+                        : " • Resultado correcto"
+                      : ""}
                   </p>
                 ) : (
                   <p className="text-zinc-400">Puntos: Pendiente</p>

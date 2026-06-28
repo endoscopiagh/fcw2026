@@ -12,6 +12,7 @@ type AdminResultEditorProps = {
     group_letter: string | null;
     home_score: number | null;
     away_score: number | null;
+    advancing_side: "HOME" | "AWAY" | null;
     home_team: { name: string; flag_emoji: string } | null;
     away_team: { name: string; flag_emoji: string } | null;
     _count: {
@@ -25,6 +26,7 @@ const ADMIN_AUDIT_TIME_ZONE = "America/Mexico_City";
 
 export function AdminResultEditor({ match, selectedDate }: AdminResultEditorProps) {
   const hasFinalScore = match.home_score !== null && match.away_score !== null;
+  const isKnockout = match.phase !== "GROUP_STAGE";
   const kickoffLabel = match.kickoff_at.toLocaleString("es-MX", {
     year: "numeric",
     month: "2-digit",
@@ -90,6 +92,24 @@ export function AdminResultEditor({ match, selectedDate }: AdminResultEditorProp
           />
         </label>
       </div>
+
+      {isKnockout ? (
+        <label className="mt-3 block text-sm text-zinc-300">
+          Equipo que avanza
+          <select
+            name="advancing_side"
+            required
+            defaultValue={match.advancing_side ?? ""}
+            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100"
+          >
+            <option value="" disabled>
+              Selecciona quién avanza
+            </option>
+            <option value="HOME">{match.home_team?.name ?? "Equipo local"}</option>
+            <option value="AWAY">{match.away_team?.name ?? "Equipo visitante"}</option>
+          </select>
+        </label>
+      ) : null}
 
       <button
         type="submit"

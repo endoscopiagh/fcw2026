@@ -22,6 +22,11 @@ export async function recalculatePredictionsForMatch(matchId: string): Promise<v
           homeScore: match.home_score as number,
           awayScore: match.away_score as number,
         },
+        {
+          isKnockout: match.phase !== "GROUP_STAGE",
+          predictedAdvancingSide: prediction.predicted_advancing_side,
+          actualAdvancingSide: match.advancing_side,
+        },
       );
 
       return prisma.predictions.update({
