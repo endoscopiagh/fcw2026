@@ -6,24 +6,30 @@ import { savePredictionAction } from "@/app/actions/predictions";
 
 type PredictionFormProps = {
   matchId: string;
-  disabled: boolean;
+  disabled?: boolean;
   isKnockout: boolean;
   homeTeamName: string;
   awayTeamName: string;
   defaultHomeScore?: number;
   defaultAwayScore?: number;
   defaultAdvancingSide?: "HOME" | "AWAY" | null;
+  action?: (formData: FormData) => Promise<void>;
+  userId?: string;
+  submitLabel?: string;
 };
 
 export function PredictionForm({
   matchId,
-  disabled,
+  disabled = false,
   isKnockout,
   homeTeamName,
   awayTeamName,
   defaultHomeScore,
   defaultAwayScore,
   defaultAdvancingSide,
+  action = savePredictionAction,
+  userId,
+  submitLabel = "Guardar predicción",
 }: PredictionFormProps) {
   const [homeScore, setHomeScore] = useState(defaultHomeScore?.toString() ?? "");
   const [awayScore, setAwayScore] = useState(defaultAwayScore?.toString() ?? "");
@@ -48,8 +54,9 @@ export function PredictionForm({
   const isTie = isKnockout && autoAdvancingSide === null;
 
   return (
-    <form action={savePredictionAction} className="grid gap-2 sm:grid-cols-4">
+    <form action={action} className="grid gap-2 sm:grid-cols-4">
       <input type="hidden" name="match_id" value={matchId} />
+      {userId ? <input type="hidden" name="user_id" value={userId} /> : null}
 
       <label className="text-sm text-zinc-300">
         Local
@@ -118,7 +125,7 @@ export function PredictionForm({
         disabled={disabled}
         className="self-end rounded-lg bg-emerald-500 px-3 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Guardar predicción
+        {submitLabel}
       </button>
     </form>
   );

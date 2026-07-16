@@ -252,3 +252,110 @@ export async function updatePhaseLockAction(formData: FormData): Promise<void> {
   revalidatePath("/admin");
   revalidatePath("/admin/results");
 }
+
+const adminSemifinalPredictionSchema = z.object({
+  user_id: z.string().min(1),
+  match_id: z.string().min(1),
+  predicted_home_score: z.coerce.number().int().min(0).max(30),
+  predicted_away_score: z.coerce.number().int().min(0).max(30),
+  predicted_advancing_side: z.enum(["HOME", "AWAY"]).optional(),
+});
+
+export async function adminSaveSemifinalPredictionAction(formData: FormData): Promise<void> {
+  await assertAdminAction();
+
+  const parsed = adminSemifinalPredictionSchema.safeParse({
+    user_id: formData.get("user_id"),
+    match_id: formData.get("match_id"),
+    predicted_home_score: formData.get("predicted_home_score"),
+    predicted_away_score: formData.get("predicted_away_score"),
+    predicted_advancing_side: formData.get("predicted_advancing_side") || undefined,
+  });
+
+  if (!parsed.success) {
+    throw new Error("Datos inválidos para la predicción retrospectiva.");
+  }
+
+  const [targetUser, match] = await Promise.all([
+    prisma.users.findUnique({
+      where: { id: parsed.data.user_id },
+      select: { id: true, role: true, is_active: true },
+    }),
+    prisma.matches.findUnique({
+      where: { id: parsed.data.match_id },
+      select: {
+        id: true,
+        phase: true,
+        kickoff_at: true,
+        home_team_id: true,
+        away_team_id: true,
+        home_score: true,
+        away_score: true,
+        advancing_side: true,
+      },
+    }),
+  ]);
+
+  if (!targetUser || targetUser.role !== "user" || !targetUser.is_active) {
+    throw new Error("Usuario no válido para captura retrospectiva.");
+  }
+
+  if (!match || match.phase !== "SEMI_FINAL") {
+    throw new Error("Solo se permiten predicciones retrospectivas de semifinales.");
+  }
+
+  if (!match.home_team_id || !match.away_team_id) {
+    throw new Error("El partido aún no tiene equipos definidos.");
+  }
+
+  const isTiePrediction = parsed.data.predicted_home_score === parsed.data.predicted_away_score;
+  let resolvedPredictedAdvancingSide: "HOME" | "AWAY" | null = null;
+
+  if (isTiePrediction) {
+    if (!parsed.data.predicted_advancing_side) {
+      throw new Error("Debes seleccionar qué equipo avanza en fase eliminatoria.");
+    }
+    resolvedPredictedAdvancingSide = parsed.data.predicted_advancing_side;
+  } else {
+    resolvedPredictedAdvancingSide =
+      parsed.data.predicted_home_score > parsed.data.predicted_away_score ? "HOME" : "AWAY";
+  }
+
+  const userUpdatedAt = new Date(match.kickoff_at.getTime() - 60_000);
+
+  await prisma.predictions.upsert({
+    where: {
+      user_id_match_id: {
+        user_id: targetUser.id,
+        match_id: match.id,
+      },
+    },
+    create: {
+      user_id: targetUser.id,
+      match_id: match.id,
+      predicted_home_score: parsed.data.predicted_home_score,
+      predicted_away_score: parsed.data.predicted_away_score,
+      predicted_advancing_side: resolvedPredictedAdvancingSide,
+      user_updated_at: userUpdatedAt,
+      points: 0,
+      is_exact: false,
+      is_result_correct: false,
+    },
+    update: {
+      predicted_home_score: parsed.data.predicted_home_score,
+      predicted_away_score: parsed.data.predicted_away_score,
+      predicted_advancing_side: resolvedPredictedAdvancingSide,
+      user_updated_at: userUpdatedAt,
+    },
+  });
+
+  if (match.home_score !== null && match.away_score !== null) {
+    await recalculatePredictionsForMatch(match.id);
+  }
+
+  revalidatePath("/admin/semifinal-predictions");
+  revalidatePath("/admin/results");
+  revalidatePath("/dashboard");
+  revalidatePath("/leaderboard");
+  revalidatePath("/predicciones");
+}

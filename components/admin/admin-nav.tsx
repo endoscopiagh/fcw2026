@@ -4,6 +4,7 @@ const LINKS = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/users", label: "Usuarios" },
   { href: "/admin/results", label: "Resultados" },
+  { href: "/admin/semifinal-predictions", label: "Pred. semifinales" },
 ];
 
 export function AdminNav() {
